@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Rondkijken begane grond</title>
+<meta name="description" content="360° rondkijken door de begane grond met het kleurplan: woonkamer, eetzone, keuken, speelkamer en hal.">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.css">
+<script src="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --sand:#D9CFBF; --moss:#8C845F; --merlot:#5F373A; --ink:#231C1A; --paper:#F4EEE4;
+    --panel:rgba(35,28,26,.82); --line:rgba(244,238,228,.18);
+    --serif:"Fraunces",Georgia,serif; --sans:"Inter","Helvetica Neue",Arial,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;background:#1B1615;color:var(--paper);font-family:var(--sans);overflow:hidden}
+  #pano{position:fixed;inset:0}
+  .pnlm-container{background:#1B1615}
+  .pnlm-panorama-info{display:none!important}
+  .pnlm-controls-container{top:12px;left:12px}
+
+  header{position:fixed;top:0;left:0;right:0;display:flex;align-items:center;gap:10px;padding:14px 18px 14px 56px;
+    background:linear-gradient(rgba(27,22,21,.85),rgba(27,22,21,0));pointer-events:none;z-index:5}
+  header h1{font-family:var(--serif);font-weight:400;font-size:clamp(18px,2.4vw,26px);letter-spacing:.01em}
+  header .versie{margin-left:auto;display:flex;gap:2px;background:var(--panel);padding:4px;border-radius:999px;pointer-events:auto}
+  header .versie button{font:500 12px var(--sans);color:var(--paper);background:transparent;border:0;padding:6px 12px;border-radius:999px;cursor:pointer}
+  header .versie button.actief{background:var(--sand);color:var(--ink)}
+  header .uitleg{pointer-events:auto;font:600 12px var(--sans);color:var(--ink);background:var(--sand);padding:8px 14px;border-radius:999px;text-decoration:none;white-space:nowrap}
+  header .kamer{font-size:13px;letter-spacing:.18em;text-transform:uppercase;color:var(--sand);opacity:.9}
+
+  /* kamerknoppen */
+  nav.kamers{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);display:flex;gap:6px;flex-wrap:wrap;justify-content:center;
+    background:var(--panel);backdrop-filter:blur(8px);padding:6px;border-radius:999px;z-index:6;max-width:calc(100vw - 32px)}
+  nav.kamers button{font:500 13px var(--sans);color:var(--paper);background:transparent;border:0;padding:8px 14px;border-radius:999px;cursor:pointer;white-space:nowrap}
+  nav.kamers button:hover{background:rgba(244,238,228,.1)}
+  nav.kamers button.actief{background:var(--sand);color:var(--ink)}
+
+  /* plattegrond */
+  aside.kaart{position:fixed;right:16px;top:70px;width:min(190px,30vw);background:var(--panel);backdrop-filter:blur(8px);
+    border:1px solid var(--line);border-radius:14px;padding:10px;z-index:6;transition:transform .25s}
+  aside.kaart .kop{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--sand)}
+  aside.kaart button.toggle{font:600 12px var(--sans);color:var(--paper);background:rgba(244,238,228,.1);border:0;border-radius:6px;padding:3px 8px;cursor:pointer}
+  .plan{position:relative;width:100%}
+  .plan img{display:block;width:100%;border-radius:8px}
+  .stip{position:absolute;width:16px;height:16px;margin:-8px 0 0 -8px;border-radius:50%;background:var(--paper);border:3px solid var(--merlot);cursor:pointer;padding:0}
+  .stip.actief{background:var(--merlot);border-color:var(--paper);z-index:2}
+  .kegel{position:absolute;width:70px;height:70px;margin:-35px 0 0 -35px;pointer-events:none;z-index:1}
+  .kegel svg{width:100%;height:100%}
+  aside.kaart.dicht .plan{display:none}
+
+  /* hotspots */
+  .naar{width:44px;height:44px;border-radius:50%;background:rgba(244,238,228,.92);box-shadow:0 2px 10px rgba(0,0,0,.35);cursor:pointer;
+    display:flex;align-items:center;justify-content:center;transition:transform .15s}
+  .naar:hover{transform:scale(1.12)}
+  .naar svg{width:22px;height:22px}
+  .naar span{position:absolute;top:50px;left:50%;transform:translateX(-50%);white-space:nowrap;font:600 12px var(--sans);color:var(--paper);
+    background:var(--panel);padding:4px 9px;border-radius:999px;opacity:0;transition:opacity .15s;pointer-events:none}
+  .naar:hover span{opacity:1}
+
+  .hint{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);background:var(--panel);padding:12px 18px;border-radius:12px;font-size:14px;z-index:7;
+    pointer-events:none;transition:opacity .6s}
+  .hint.weg{opacity:0}
+  footer{position:fixed;left:16px;bottom:18px;font-size:11px;color:var(--sand);opacity:.7;z-index:5;max-width:40vw}
+
+  @media (max-width:700px){
+    header{padding:10px 10px 10px 48px;gap:6px}
+    header h1{display:none}
+    header .kamer{display:none}
+    header .versie{margin-left:0}
+    header .versie button{padding:6px 9px;font-size:11px}
+    header .uitleg{margin-left:auto;padding:7px 10px;font-size:11px}
+    aside.kaart{top:58px;bottom:auto;right:10px;width:140px;padding:7px}
+    aside.kaart .kop{font-size:10px;letter-spacing:.06em;margin-bottom:0}
+    aside.kaart:not(.dicht) .kop{margin-bottom:6px}
+    footer{display:none}
+    nav.kamers{flex-wrap:nowrap;overflow-x:auto;justify-content:flex-start;border-radius:16px;bottom:12px;max-width:calc(100vw - 20px);
+      scrollbar-width:none;-webkit-overflow-scrolling:touch}
+    nav.kamers::-webkit-scrollbar{display:none}
+    nav.kamers button{padding:7px 11px;font-size:12px;flex:0 0 auto}
+  }
+</style>
+</head>
+<body>
+<div id="pano"></div>
+<header><h1>Rondkijken</h1><span class="kamer" id="kamernaam"></span>
+  <div class="versie" id="versie" role="group" aria-label="Weergave"><button data-v="foto" class="actief">Fotorealistisch</button><button data-v="model">3D-model</button></div>
+  <a class="uitleg" href="uitleg.html">Sfeer &amp; kleur</a></header>
+<aside class="kaart" id="kaart">
+  <div class="kop"><span>Plattegrond</span><button class="toggle" id="toggle" aria-expanded="true">verberg</button></div>
+  <div class="plan" id="plan"><img src="img/plan.jpg" alt="Plattegrond begane grond met de standplaatsen"></div>
+</aside>
+<nav class="kamers" id="kamers" aria-label="Ruimtes"></nav>
+<div class="hint" id="hint">Sleep om rond te kijken · klik op de pijlen om te lopen</div>
+<footer>Fotorealistisch: AI-bewerking van de Blender-renders. 3D-model: Blender. Kleuren en materialen zijn benaderingen.</footer>
+
+<script>
+// standplaatsen (Blender-meters; vloer woonkamer -0,20) en plattegrond-omrekening (uit plan.json)
+const PLAN = {w:1000, h:2000, xmin:3.4, ymax:0.65, mpp:0.0078};
+const SPOTS = {
+  woonkamer:  {titel:'Woonkamer', x:7.75, y:-1.60, oog:1.50, start:115},
+  vleugel:    {titel:'Bij de vleugel', x:7.90, y:-4.30, oog:1.50, start:-95},
+  eetzone:    {titel:'Eetzone', x:9.00, y:-5.95, oog:1.55, start:175},
+  keuken:     {titel:'Keuken', x:8.15, y:-11.60, oog:1.55, start:10},
+  speelkamer: {titel:'Speelkamer', x:5.80, y:-7.15, oog:1.50, start:-80},
+  hal:        {titel:'Hal', x:6.25, y:-11.30, oog:1.55, start:-160},
+};
+// looproutes; 'via' = punt waar de pijl staat (boog, pui, deur)
+const LINKS = {
+  woonkamer:  [['vleugel'], ['eetzone', [8.90, -5.28]]],
+  vleugel:    [['woonkamer'], ['eetzone', [8.90, -5.28]]],
+  eetzone:    [['vleugel', [8.90, -5.28]], ['keuken'], ['speelkamer', [7.10, -7.55]], ['hal', [7.15, -9.20]]],
+  keuken:     [['eetzone']],
+  speelkamer: [['eetzone', [7.10, -7.55]]],
+  hal:        [['eetzone', [7.10, -9.20]]],
+};
+const VOLGORDE = ['woonkamer', 'vleugel', 'eetzone', 'keuken', 'speelkamer', 'hal'];
+const deg = r => r * 180 / Math.PI;
+// midden van het panorama = +Y (tuinzijde); yaw naar rechts = +X
+function richting(a, p) {
+  const dx = p[0] - a.x, dy = p[1] - a.y, d = Math.hypot(dx, dy);
+  return {yaw: deg(Math.atan2(dx, dy)), pitch: -deg(Math.atan2(a.oog - 0.45, Math.max(d, 0.8)))};
+}
+const pijl = '<svg viewBox="0 0 24 24" fill="none" stroke="#5F373A" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>';
+function maakSpot(div, args) {
+  div.classList.add('naar');
+  div.innerHTML = pijl + '<span>' + args + '</span>';
+}
+const scenes = {};
+const VERSIE = {foto: {suffix: '', bestand: id => 'pano/' + id + '-fotorealistisch.jpg'},
+                model: {suffix: '~model', bestand: id => 'pano/' + id + '.jpg'}};
+let versie = 'foto';
+const kaal = sid => sid.split('~')[0];
+for (const [v, cfg] of Object.entries(VERSIE)) {
+  for (const id of VOLGORDE) {
+    const a = SPOTS[id];
+    scenes[id + cfg.suffix] = {
+      type: 'equirectangular', panorama: cfg.bestand(id), title: a.titel,
+      yaw: a.start, pitch: -5, hfov: 105, autoLoad: true,
+      hotSpots: LINKS[id].map(([doel, via]) => {
+        const b = SPOTS[doel]; const r = richting(a, via || [b.x, b.y]);
+        return {type: 'scene', sceneId: doel + cfg.suffix, yaw: r.yaw, pitch: r.pitch, targetYaw: b.start,
+                createTooltipFunc: maakSpot, createTooltipArgs: b.titel, cssClass: 'naar-spot'};
+      }),
+    };
+  }
+}
+const viewer = pannellum.viewer('pano', {
+  default: {firstScene: 'woonkamer', sceneFadeDuration: 700, autoLoad: true, showControls: true, compass: false, mouseZoom: true},
+  scenes,
+});
+const ga = id => viewer.loadScene(id + VERSIE[versie].suffix);
+function zetVersie(v) {
+  if (v === versie) return;
+  versie = v;
+  const id = kaal(viewer.getScene());
+  viewer.loadScene(id + VERSIE[v].suffix, viewer.getPitch(), viewer.getYaw(), viewer.getHfov());
+  document.querySelectorAll('#versie button').forEach(b => b.classList.toggle('actief', b.dataset.v === v));
+}
+document.querySelectorAll('#versie button').forEach(b => b.onclick = () => zetVersie(b.dataset.v));
+
+// plattegrond: stippen + kijkrichting
+const plan = document.getElementById('plan');
+const naarPx = (x, y) => [ (x - PLAN.xmin) / PLAN.mpp / PLAN.w * 100, (PLAN.ymax - y) / PLAN.mpp / PLAN.h * 100 ];
+const kegel = document.createElement('div'); kegel.className = 'kegel';
+kegel.innerHTML = '<svg viewBox="-50 -50 100 100"><path d="M0 0 L-26 -44 A51 51 0 0 1 26 -44 Z" fill="rgba(95,55,58,.45)"/></svg>';
+plan.appendChild(kegel);
+const stippen = {};
+for (const id of VOLGORDE) {
+  const [l, t] = naarPx(SPOTS[id].x, SPOTS[id].y);
+  const b = document.createElement('button'); b.className = 'stip'; b.title = SPOTS[id].titel;
+  b.style.left = l + '%'; b.style.top = t + '%';
+  b.onclick = () => ga(id);
+  plan.appendChild(b); stippen[id] = b;
+}
+const nav = document.getElementById('kamers'); const knoppen = {};
+for (const id of VOLGORDE) {
+  const b = document.createElement('button'); b.textContent = SPOTS[id].titel;
+  b.onclick = () => ga(id); nav.appendChild(b); knoppen[id] = b;
+}
+function actief(sid) {
+  const id = kaal(sid);
+  document.getElementById('kamernaam').textContent = SPOTS[id].titel;
+  for (const k of VOLGORDE) { stippen[k].classList.toggle('actief', k === id); knoppen[k].classList.toggle('actief', k === id); }
+  const [l, t] = naarPx(SPOTS[id].x, SPOTS[id].y); kegel.style.left = l + '%'; kegel.style.top = t + '%';
+}
+viewer.on('scenechange', actief); actief('woonkamer');
+(function loop(){ kegel.style.transform = 'rotate(' + viewer.getYaw() + 'deg)'; requestAnimationFrame(loop); })();
+const kaart = document.getElementById('kaart'), tg = document.getElementById('toggle');
+tg.onclick = () => { const dicht = kaart.classList.toggle('dicht'); tg.textContent = dicht ? 'toon' : 'verberg'; tg.setAttribute('aria-expanded', !dicht); };
+if (window.innerWidth < 700) tg.click();
+setTimeout(() => document.getElementById('hint').classList.add('weg'), 3500);
+</script>
+</body>
+</html>
