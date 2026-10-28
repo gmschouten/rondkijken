@@ -107,17 +107,22 @@ const SPOTS = {
   keuken:     {titel:'Keuken', x:8.15, y:-11.60, oog:1.55, start:10},
   speelkamer: {titel:'Speelkamer', x:5.80, y:-7.15, oog:1.50, start:-80},
   hal:        {titel:'Hal', x:6.25, y:-11.30, oog:1.55, start:-160},
+  erker:      {titel:'Keuken · erker', x:8.45, y:-13.85, oog:1.55, start:10},
+  eiland:     {titel:'Keuken · eiland', x:10.13, y:-11.20, oog:1.55, start:-120},
 };
 // looproutes; 'via' = punt waar de pijl staat (boog, pui, deur)
 const LINKS = {
   woonkamer:  [['vleugel'], ['eetzone', [8.90, -5.28]]],
   vleugel:    [['woonkamer'], ['eetzone', [8.90, -5.28]]],
-  eetzone:    [['vleugel', [8.90, -5.28]], ['keuken'], ['speelkamer', [7.10, -7.55]], ['hal', [7.15, -9.20]]],
-  keuken:     [['eetzone']],
+  eetzone:    [['vleugel', [8.90, -5.28]], ['keuken'], ['eiland'], ['speelkamer', [7.10, -7.55]], ['hal', [7.15, -9.20]]],
+  keuken:     [['eetzone'], ['erker'], ['eiland', [9.20, -13.75]]],
+  erker:      [['keuken'], ['eiland']],
+  eiland:     [['eetzone'], ['erker'], ['keuken', [9.20, -13.75]]],
   speelkamer: [['eetzone', [7.10, -7.55]]],
   hal:        [['eetzone', [7.10, -9.20]]],
 };
-const VOLGORDE = ['woonkamer', 'vleugel', 'eetzone', 'keuken', 'speelkamer', 'hal'];
+const VOLGORDE = ['woonkamer', 'vleugel', 'eetzone', 'keuken', 'erker', 'eiland', 'speelkamer', 'hal'];
+const HEEFT_FOTO = new Set(['woonkamer', 'vleugel', 'eetzone', 'keuken', 'speelkamer', 'hal']);   // AI-versies die er zijn
 const deg = r => r * 180 / Math.PI;
 // midden van het panorama = +Y (tuinzijde); yaw naar rechts = +X
 function richting(a, p) {
@@ -130,7 +135,7 @@ function maakSpot(div, args) {
   div.innerHTML = pijl + '<span>' + args + '</span>';
 }
 const scenes = {};
-const VERSIE = {foto: {suffix: '', bestand: id => 'pano/' + id + '-fotorealistisch.jpg'},
+const VERSIE = {foto: {suffix: '', bestand: id => HEEFT_FOTO.has(id) ? 'pano/' + id + '-fotorealistisch.jpg' : 'pano/' + id + '.jpg'},
                 model: {suffix: '~model', bestand: id => 'pano/' + id + '.jpg'}};
 let versie = 'foto';
 const kaal = sid => sid.split('~')[0];
