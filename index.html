@@ -101,7 +101,7 @@
 </aside>
 <nav class="kamers" id="kamers" aria-label="Ruimtes"></nav>
 <div class="hint" id="hint">Sleep om rond te kijken · klik op de pijlen om te lopen</div>
-<footer>Fotorealistisch: AI-bewerking van de Blender-renders. 3D-model en avond: Blender (gordijnen dicht, lampen en kaarsen aan). Kleuren en materialen zijn benaderingen.</footer>
+<footer>Fotorealistisch: AI-bewerking van de Blender-renders. 3D-model: Blender. Avond: gordijnen dicht, lampen en kaarsen aan. Kleuren en materialen zijn benaderingen.</footer>
 
 <script>
 // standplaatsen (Blender-meters; vloer woonkamer -0,20) en plattegrond-omrekening (uit plan.json)
@@ -134,7 +134,7 @@ const LINKS = {
   badkamer:   [['slaapkamer', [4.25, -3.85]]],
 };
 const VOLGORDE = ['woonkamer', 'vleugel', 'eetzone', 'keuken', 'erker', 'eiland', 'speelkamer', 'hal', 'slaapkamer', 'slaapkamerbed', 'badkamer'];
-const HEEFT_FOTO = new Set(['eetzone', 'eiland', 'erker', 'hal', 'keuken', 'speelkamer', 'vleugel', 'woonkamer']);   // AI-versies die er zijn
+const HEEFT_FOTO = new Set(['badkamer-avond', 'badkamer', 'eetzone-avond', 'eetzone', 'eiland-avond', 'eiland', 'erker-avond', 'erker', 'hal-avond', 'hal', 'keuken-avond', 'keuken', 'slaapkamer-avond', 'slaapkamer', 'slaapkamerbed-avond', 'slaapkamerbed', 'speelkamer-avond', 'speelkamer', 'vleugel-avond', 'vleugel', 'woonkamer-avond', 'woonkamer']);   // AI-versies die er zijn
 const deg = r => r * 180 / Math.PI;
 // midden van het panorama = +Y (tuinzijde); yaw naar rechts = +X
 function richting(a, p) {
@@ -147,10 +147,10 @@ function maakSpot(div, args) {
   div.innerHTML = pijl + '<span>' + args + '</span>';
 }
 const scenes = {};
-// scène-id = <plek>~<versie>~<moment>; 's avonds is er (nog) alleen het 3D-model
+// scène-id = <plek>~<versie>~<moment>; zonder fotorealistische versie valt de site terug op het 3D-model
 function bestand(id, v, m) {
-  if (m === 'avond') return 'pano/' + id + '-avond.jpg';
-  return v === 'foto' && HEEFT_FOTO.has(id) ? 'pano/' + id + '-fotorealistisch.jpg' : 'pano/' + id + '.jpg';
+  const naam = m === 'avond' ? id + '-avond' : id;
+  return v === 'foto' && HEEFT_FOTO.has(naam) ? 'pano/' + naam + '-fotorealistisch.jpg' : 'pano/' + naam + '.jpg';
 }
 let versie = 'foto', moment = 'dag';
 const sceneId = (id, v = versie, m = moment) => id + '~' + v + '~' + m;
@@ -178,16 +178,12 @@ const viewer = pannellum.viewer('pano', {
 const ga = id => viewer.loadScene(sceneId(id));
 function herlaad() {
   viewer.loadScene(sceneId(kaal(viewer.getScene())), viewer.getPitch(), viewer.getYaw(), viewer.getHfov());
-  // 's avonds geen fotorealistische versie: dan toont de site het 3D-model
-  document.querySelectorAll('#versie button').forEach(b => {
-    b.classList.toggle('actief', moment === 'dag' ? b.dataset.v === versie : b.dataset.v === 'model');
-    b.disabled = moment === 'avond';
-  });
+  document.querySelectorAll('#versie button').forEach(b => b.classList.toggle('actief', b.dataset.v === versie));
   document.querySelectorAll('#moment button').forEach(b => b.classList.toggle('actief', b.dataset.m === moment));
 }
 document.querySelectorAll('#versie button').forEach(b => b.onclick = () => { if (b.dataset.v !== versie) { versie = b.dataset.v; herlaad(); } });
 document.querySelectorAll('#moment button').forEach(b => b.onclick = () => { if (b.dataset.m !== moment) { moment = b.dataset.m; herlaad(); } });
-document.querySelector('#moment button[data-m="avond"]').title = "Gordijnen dicht, lampen en kaarsen aan (3D-model)";
+document.querySelector('#moment button[data-m="avond"]').title = "Gordijnen dicht, lampen en kaarsen aan";
 
 // plattegrond: stippen + kijkrichting
 const plan = document.getElementById('plan');
