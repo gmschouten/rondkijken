@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Rondkijken begane grond</title>
-<meta name="description" content="360° rondkijken door de begane grond met het kleurplan: woonkamer, eetzone, keuken, speelkamer, hal, slaapkamer en badkamer, overdag en 's avonds.">
+<title>Rondkijken in huis</title>
+<meta name="description" content="360° rondkijken door het huis met het kleurplan: begane grond (woonkamer, eetzone, keuken, speelkamer, hal, slaapkamer, badkamer) en 1e verdieping (ouderslaapkamer, kinderkamer, meisjeskamer, inloopkast), overdag en 's avonds.">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.css">
 <script src="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -54,6 +54,11 @@
   .kegel{position:absolute;width:70px;height:70px;margin:-35px 0 0 -35px;pointer-events:none;z-index:1}
   .kegel svg{width:100%;height:100%}
   aside.kaart.dicht .plan{display:none}
+  aside.kaart .lagen{display:flex;gap:2px;background:rgba(244,238,228,.08);border-radius:999px;padding:2px;margin-bottom:8px}
+  aside.kaart .lagen button{flex:1;font:600 11px var(--sans);color:var(--paper);background:transparent;border:0;border-radius:999px;padding:4px 0;cursor:pointer}
+  aside.kaart .lagen button.actief{background:var(--sand);color:var(--ink)}
+  aside.kaart.dicht .lagen{display:none}
+  nav.kamers button.laag{color:var(--sand);border:1px solid var(--line)}
 
   /* hotspots */
   .naar{width:44px;height:44px;border-radius:50%;background:rgba(244,238,228,.92);box-shadow:0 2px 10px rgba(0,0,0,.35);cursor:pointer;
@@ -97,14 +102,15 @@
   <a class="uitleg" href="uitleg.html">Sfeer &amp; kleur</a></header>
 <aside class="kaart" id="kaart">
   <div class="kop"><span>Plattegrond</span><button class="toggle" id="toggle" aria-expanded="true">verberg</button></div>
-  <div class="plan" id="plan"><img src="img/plan.jpg" alt="Plattegrond begane grond met de standplaatsen"></div>
+  <div class="lagen" id="lagen" role="group" aria-label="Verdieping"><button data-l="0" class="actief">Begane grond</button><button data-l="1">1e verdieping</button></div>
+  <div class="plan" id="plan"><img id="planimg" src="img/plan.jpg" alt="Plattegrond begane grond met de standplaatsen"></div>
 </aside>
 <nav class="kamers" id="kamers" aria-label="Ruimtes"></nav>
 <div class="hint" id="hint">Sleep om rond te kijken · klik op de pijlen om te lopen</div>
 <footer>Fotorealistisch: AI-bewerking van de Blender-renders. 3D-model: Blender. Avond: gordijnen dicht, lampen en kaarsen aan. Kleuren en materialen zijn benaderingen.</footer>
 
 <script>
-// standplaatsen (Blender-meters; vloer woonkamer -0,20) en plattegrond-omrekening (uit plan.json)
+// standplaatsen (Blender-meters; oog = boven de eigen vloer; l = verdieping) en plattegrond-omrekening (uit plan.json, voor beide verdiepingen gelijk)
 const PLAN = {w:1420, h:2000, xmin:0.1975, ymax:0.6, mpp:0.00775};
 const SPOTS = {
   woonkamer:  {titel:'Woonkamer', x:7.75, y:-1.60, oog:1.50, start:115},
@@ -118,8 +124,20 @@ const SPOTS = {
   slaapkamer: {titel:'Slaapkamer', x:2.95, y:-3.30, oog:1.50, start:-130},
   slaapkamerbed: {titel:'Slaapkamer · bed', x:2.88, y:-5.95, oog:1.50, start:-60},
   badkamer:   {titel:'Badkamer', x:4.32, y:-4.30, oog:1.55, start:60},
+  overloop:   {titel:'Overloop', x:6.55, y:-9.55, oog:1.50, start:33, l:1},
+  gang:       {titel:'Gang boven', x:7.85, y:-6.40, oog:1.50, start:0, l:1},
+  ouders:     {titel:'Ouderslaapkamer', x:3.75, y:-3.90, oog:1.45, start:-73, l:1},
+  kinderkamer: {titel:'Kinderkamer', x:6.95, y:-2.85, oog:1.40, start:-63, l:1},
+  meisjeskamer: {titel:'Meisjeskamer', x:7.55, y:-11.20, oog:1.45, start:101, l:1},
+  inloopkast: {titel:'Inloopkast', x:9.40, y:-7.65, oog:1.45, start:70, l:1},
+  portaal:    {titel:'Portaal', x:7.25, y:-4.45, oog:1.50, start:-90, l:1},
+  oudersraam: {titel:'Ouders · raam', x:3.75, y:-2.05, oog:1.45, start:-119, l:1},
+  kinderbedstede: {titel:'Kinderkamer · bedstede', x:8.10, y:-3.00, oog:1.40, start:143, l:1},
+  meisjesleeshoek: {titel:'Meisjeskamer · leeshoek', x:6.55, y:-11.55, oog:1.40, start:-142, l:1},
 };
-// looproutes; 'via' = punt waar de pijl staat (boog, pui, deur)
+const LAGEN = [{naam:'Begane grond', img:'img/plan.jpg', ingang:'hal'}, {naam:'1e verdieping', img:'img/plan-ev.jpg', ingang:'overloop'}];
+const laag = id => SPOTS[id].l || 0;
+// looproutes; 'via' = punt waar de pijl staat (boog, pui, deur); derde waarde = pitch (trap op/af)
 const LINKS = {
   woonkamer:  [['vleugel'], ['eetzone', [8.90, -5.28]], ['slaapkamer', [5.20, -3.20]]],
   vleugel:    [['woonkamer'], ['eetzone', [8.90, -5.28]], ['slaapkamer', [5.20, -3.20]]],
@@ -128,13 +146,28 @@ const LINKS = {
   erker:      [['keuken'], ['eiland']],
   eiland:     [['eetzone'], ['erker'], ['keuken', [9.20, -13.75]]],
   speelkamer: [['eetzone', [7.10, -7.55]]],
-  hal:        [['eetzone', [7.10, -9.20]]],
+  hal:        [['eetzone', [7.10, -9.20]], ['overloop', [5.30, -11.20], 14]],
   slaapkamer: [['vleugel', [5.20, -3.20]], ['slaapkamerbed'], ['badkamer', [4.25, -3.85]]],
   slaapkamerbed: [['slaapkamer']],
   badkamer:   [['slaapkamer', [4.25, -3.85]]],
+  overloop:   [['hal', [5.35, -10.90], -38], ['gang', [7.85, -8.60]], ['meisjeskamer', [7.22, -10.26]]],
+  gang:       [['overloop', [7.85, -9.30]], ['inloopkast', [8.36, -5.90]], ['portaal']],
+  portaal:    [['gang'], ['ouders', [6.07, -4.07]], ['kinderkamer', [7.64, -3.55]]],
+  ouders:     [['portaal', [6.07, -4.07]], ['oudersraam']],
+  oudersraam: [['ouders']],
+  kinderkamer: [['portaal', [7.64, -3.55]], ['kinderbedstede']],
+  kinderbedstede: [['kinderkamer']],
+  meisjeskamer: [['overloop', [7.22, -10.26]], ['meisjesleeshoek']],
+  meisjesleeshoek: [['meisjeskamer']],
+  inloopkast: [['gang', [8.36, -5.90]]],
 };
-const VOLGORDE = ['woonkamer', 'vleugel', 'eetzone', 'keuken', 'erker', 'eiland', 'speelkamer', 'hal', 'slaapkamer', 'slaapkamerbed', 'badkamer'];
-const HEEFT_FOTO = new Set(['badkamer-avond', 'badkamer', 'eetzone-avond', 'eetzone', 'eiland-avond', 'eiland', 'erker-avond', 'erker', 'hal-avond', 'hal', 'keuken-avond', 'keuken', 'slaapkamer-avond', 'slaapkamer', 'slaapkamerbed-avond', 'slaapkamerbed', 'speelkamer-avond', 'speelkamer', 'vleugel-avond', 'vleugel', 'woonkamer-avond', 'woonkamer']);   // AI-versies die er zijn
+const VOLGORDE = ['woonkamer', 'vleugel', 'eetzone', 'keuken', 'erker', 'eiland', 'speelkamer', 'hal', 'slaapkamer', 'slaapkamerbed', 'badkamer',
+                  'overloop', 'gang', 'portaal', 'ouders', 'oudersraam', 'kinderkamer', 'kinderbedstede', 'meisjeskamer', 'meisjesleeshoek', 'inloopkast'];
+const HEEFT_FOTO = new Set(['badkamer-avond', 'badkamer', 'eetzone-avond', 'eetzone', 'eiland-avond', 'eiland', 'erker-avond', 'erker', 'gang', 'hal-avond', 'hal', 'inloopkast', 'keuken-avond', 'keuken', 'kinderkamer', 'meisjeskamer', 'ouders', 'overloop', 'portaal', 'slaapkamer-avond', 'slaapkamer', 'slaapkamerbed-avond', 'slaapkamerbed', 'speelkamer-avond', 'speelkamer', 'vleugel-avond', 'vleugel', 'woonkamer-avond', 'woonkamer']);   // AI-versies die er zijn
+const HEEFT_PANO = new Set(['badkamer-avond', 'badkamer', 'eetzone-avond', 'eetzone', 'eiland-avond', 'eiland', 'erker-avond', 'erker', 'gang', 'hal-avond', 'hal', 'inloopkast', 'keuken-avond', 'keuken', 'kinderkamer', 'meisjeskamer', 'ouders', 'overloop', 'portaal', 'slaapkamer-avond', 'slaapkamer', 'slaapkamerbed-avond', 'slaapkamerbed', 'speelkamer-avond', 'speelkamer', 'vleugel-avond', 'vleugel', 'woonkamer-avond', 'woonkamer']);   // 3D-renders die er zijn (publiceer_site.sh); standplaatsen zonder render vallen weg
+for (const id of Object.keys(SPOTS)) if (!HEEFT_PANO.has(id)) { delete SPOTS[id]; delete LINKS[id]; }
+VOLGORDE.splice(0, VOLGORDE.length, ...VOLGORDE.filter(id => SPOTS[id]));
+for (const id in LINKS) LINKS[id] = LINKS[id].filter(([doel]) => SPOTS[doel]);
 const deg = r => r * 180 / Math.PI;
 // midden van het panorama = +Y (tuinzijde); yaw naar rechts = +X
 function richting(a, p) {
@@ -147,9 +180,9 @@ function maakSpot(div, args) {
   div.innerHTML = pijl + '<span>' + args + '</span>';
 }
 const scenes = {};
-// scène-id = <plek>~<versie>~<moment>; zonder fotorealistische versie valt de site terug op het 3D-model
+// scène-id = <plek>~<versie>~<moment>; zonder fotorealistische versie valt de site terug op het 3D-model, zonder avondrender op de dagversie
 function bestand(id, v, m) {
-  const naam = m === 'avond' ? id + '-avond' : id;
+  const naam = m === 'avond' && HEEFT_PANO.has(id + '-avond') ? id + '-avond' : id;
   return v === 'foto' && HEEFT_FOTO.has(naam) ? 'pano/' + naam + '-fotorealistisch.jpg' : 'pano/' + naam + '.jpg';
 }
 let versie = 'foto', moment = 'dag';
@@ -162,9 +195,9 @@ for (const v of ['foto', 'model']) {
       scenes[sceneId(id, v, m)] = {
         type: 'equirectangular', panorama: bestand(id, v, m), title: a.titel,
         yaw: a.start, pitch: -5, hfov: 105, autoLoad: true,
-        hotSpots: LINKS[id].map(([doel, via]) => {
+        hotSpots: LINKS[id].map(([doel, via, pitch]) => {
           const b = SPOTS[doel]; const r = richting(a, via || [b.x, b.y]);
-          return {type: 'scene', sceneId: sceneId(doel, v, m), yaw: r.yaw, pitch: r.pitch, targetYaw: b.start,
+          return {type: 'scene', sceneId: sceneId(doel, v, m), yaw: r.yaw, pitch: pitch ?? r.pitch, targetYaw: b.start,
                   createTooltipFunc: maakSpot, createTooltipArgs: b.titel, cssClass: 'naar-spot'};
         }),
       };
@@ -204,10 +237,21 @@ for (const id of VOLGORDE) {
   const b = document.createElement('button'); b.textContent = SPOTS[id].titel;
   b.onclick = () => ga(id); nav.appendChild(b); knoppen[id] = b;
 }
+// andere verdieping: knop achteraan in de kamerbalk + knoppen boven de plattegrond (gaan via de trap naar hal/overloop)
+const wissel = document.createElement('button'); wissel.className = 'laag'; nav.appendChild(wissel);
+wissel.onclick = () => ga(LAGEN[1 - laag(kaal(viewer.getScene()))].ingang);
+document.querySelectorAll('#lagen button').forEach(b => b.onclick = () => { if (+b.dataset.l !== laag(kaal(viewer.getScene()))) ga(LAGEN[+b.dataset.l].ingang); });
+const planimg = document.getElementById('planimg');
 function actief(sid) {
-  const id = kaal(sid);
+  const id = kaal(sid), lg = laag(id);
   document.getElementById('kamernaam').textContent = SPOTS[id].titel;
-  for (const k of VOLGORDE) { stippen[k].classList.toggle('actief', k === id); knoppen[k].classList.toggle('actief', k === id); }
+  for (const k of VOLGORDE) {
+    stippen[k].classList.toggle('actief', k === id); knoppen[k].classList.toggle('actief', k === id);
+    stippen[k].style.display = knoppen[k].style.display = laag(k) === lg ? '' : 'none';
+  }
+  wissel.textContent = lg ? '↓ Begane grond' : '↑ 1e verdieping';
+  document.querySelectorAll('#lagen button').forEach(b => b.classList.toggle('actief', +b.dataset.l === lg));
+  if (!planimg.src.endsWith(LAGEN[lg].img)) { planimg.src = LAGEN[lg].img; planimg.alt = 'Plattegrond ' + LAGEN[lg].naam.toLowerCase() + ' met de standplaatsen'; }
   const [l, t] = naarPx(SPOTS[id].x, SPOTS[id].y); kegel.style.left = l + '%'; kegel.style.top = t + '%';
 }
 viewer.on('scenechange', actief); actief(sceneId('woonkamer'));
