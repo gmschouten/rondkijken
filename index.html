@@ -49,6 +49,7 @@
   aside.kaart button.toggle{font:600 12px var(--sans);color:var(--paper);background:rgba(244,238,228,.1);border:0;border-radius:6px;padding:3px 8px;cursor:pointer}
   .plan{position:relative;width:100%}
   .plan img{display:block;width:100%;border-radius:8px}
+  .kop a.groot{margin-left:auto;margin-right:8px;text-decoration:none}
   .stip{position:absolute;width:16px;height:16px;margin:-8px 0 0 -8px;border-radius:50%;background:var(--paper);border:3px solid var(--merlot);cursor:pointer;padding:0}
   .stip.actief{background:var(--merlot);border-color:var(--paper);z-index:2}
   .kegel{position:absolute;width:70px;height:70px;margin:-35px 0 0 -35px;pointer-events:none;z-index:1}
@@ -101,7 +102,7 @@
   <div class="versie moment" id="moment" role="group" aria-label="Moment van de dag"><button data-m="dag" class="actief">Dag</button><button data-m="avond">Avond</button></div>
   <a class="uitleg" href="uitleg.html">Sfeer &amp; kleur</a></header>
 <aside class="kaart" id="kaart">
-  <div class="kop"><span>Plattegrond</span><button class="toggle" id="toggle" aria-expanded="true">verberg</button></div>
+  <div class="kop"><span>Plattegrond</span><a class="toggle groot" id="planGroot" href="img/plan-groot.jpg" target="_blank" rel="noopener">groot</a><button class="toggle" id="toggle" aria-expanded="true">verberg</button></div>
   <div class="lagen" id="lagen" role="group" aria-label="Verdieping"><button data-l="0" class="actief">Begane grond</button><button data-l="1">1e verdieping</button></div>
   <div class="plan" id="plan"><img id="planimg" src="img/plan.jpg" alt="Plattegrond begane grond met de standplaatsen"></div>
 </aside>
@@ -251,7 +252,7 @@ function actief(sid) {
   }
   wissel.textContent = lg ? '↓ Begane grond' : '↑ 1e verdieping';
   document.querySelectorAll('#lagen button').forEach(b => b.classList.toggle('actief', +b.dataset.l === lg));
-  if (!planimg.src.endsWith(LAGEN[lg].img)) { planimg.src = LAGEN[lg].img; planimg.alt = 'Plattegrond ' + LAGEN[lg].naam.toLowerCase() + ' met de standplaatsen'; }
+  if (!planimg.src.endsWith(LAGEN[lg].img)) { planimg.src = LAGEN[lg].img; planimg.alt = 'Plattegrond ' + LAGEN[lg].naam.toLowerCase() + ' met de standplaatsen'; document.getElementById('planGroot').href = LAGEN[lg].img.replace('.jpg', '-groot.jpg'); }
   const [l, t] = naarPx(SPOTS[id].x, SPOTS[id].y); kegel.style.left = l + '%'; kegel.style.top = t + '%';
 }
 viewer.on('scenechange', actief); actief(sceneId('woonkamer'));
