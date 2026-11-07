@@ -133,7 +133,7 @@ const SPOTS = {
   inloopkast: {titel:'Inloopkast', x:9.40, y:-7.65, oog:1.45, start:70, l:1},
   portaal:    {titel:'Portaal', x:7.25, y:-4.45, oog:1.50, start:-90, l:1},
   oudersraam: {titel:'Ouders · raam', x:3.75, y:-2.05, oog:1.45, start:-119, l:1},
-  kinderbedstede: {titel:'Kinderkamer · bedstede', x:8.10, y:-3.00, oog:1.40, start:143, l:1},
+  kinderbedstede: {titel:'Kinderkamer · bed en speelhoek', x:8.10, y:-3.00, oog:1.40, start:115, l:1},
   meisjesleeshoek: {titel:'Meisjeskamer · leeshoek', x:6.55, y:-11.55, oog:1.40, start:-142, l:1},
 };
 const LAGEN = [{naam:'Begane grond', img:'img/plan.jpg', ingang:'hal'}, {naam:'1e verdieping', img:'img/plan-ev.jpg', ingang:'overloop'}];
@@ -164,7 +164,7 @@ const LINKS = {
 };
 const VOLGORDE = ['woonkamer', 'vleugel', 'eetzone', 'keuken', 'erker', 'eiland', 'speelkamer', 'hal', 'slaapkamer', 'slaapkamerbed', 'badkamer',
                   'overloop', 'gang', 'portaal', 'ouders', 'oudersraam', 'kinderkamer', 'kinderbedstede', 'meisjeskamer', 'meisjesleeshoek', 'inloopkast'];
-const HEEFT_FOTO = new Set(['badkamer-avond', 'badkamer', 'eetzone-avond', 'eetzone', 'eiland-avond', 'eiland', 'erker-avond', 'erker', 'gang-avond', 'gang', 'hal-avond', 'hal', 'inloopkast-avond', 'inloopkast', 'keuken-avond', 'keuken', 'kinderbedstede-avond', 'kinderbedstede', 'kinderkamer-avond', 'kinderkamer', 'meisjeskamer-avond', 'meisjeskamer', 'meisjesleeshoek-avond', 'meisjesleeshoek', 'ouders-avond', 'ouders', 'oudersraam-avond', 'oudersraam', 'overloop-avond', 'overloop', 'portaal-avond', 'portaal', 'slaapkamer-avond', 'slaapkamer', 'slaapkamerbed-avond', 'slaapkamerbed', 'speelkamer-avond', 'speelkamer', 'vleugel-avond', 'vleugel', 'woonkamer-avond', 'woonkamer']);   // AI-versies die er zijn
+const HEEFT_FOTO = new Set(['badkamer-avond', 'badkamer', 'eetzone-avond', 'eetzone', 'eiland-avond', 'eiland', 'erker-avond', 'erker', 'gang-avond', 'gang', 'hal-avond', 'hal', 'inloopkast-avond', 'inloopkast', 'keuken-avond', 'keuken', 'meisjeskamer-avond', 'meisjeskamer', 'meisjesleeshoek-avond', 'meisjesleeshoek', 'overloop-avond', 'overloop', 'portaal-avond', 'portaal', 'slaapkamer-avond', 'slaapkamer', 'slaapkamerbed-avond', 'slaapkamerbed', 'speelkamer-avond', 'speelkamer', 'vleugel-avond', 'vleugel', 'woonkamer-avond', 'woonkamer']);   // AI-versies die er zijn
 const HEEFT_PANO = new Set(['badkamer-avond', 'badkamer', 'eetzone-avond', 'eetzone', 'eiland-avond', 'eiland', 'erker-avond', 'erker', 'gang-avond', 'gang', 'hal-avond', 'hal', 'inloopkast-avond', 'inloopkast', 'keuken-avond', 'keuken', 'kinderbedstede-avond', 'kinderbedstede', 'kinderkamer-avond', 'kinderkamer', 'meisjeskamer-avond', 'meisjeskamer', 'meisjesleeshoek-avond', 'meisjesleeshoek', 'ouders-avond', 'ouders', 'oudersraam-avond', 'oudersraam', 'overloop-avond', 'overloop', 'portaal-avond', 'portaal', 'slaapkamer-avond', 'slaapkamer', 'slaapkamerbed-avond', 'slaapkamerbed', 'speelkamer-avond', 'speelkamer', 'vleugel-avond', 'vleugel', 'woonkamer-avond', 'woonkamer']);   // 3D-renders die er zijn (publiceer_site.sh); standplaatsen zonder render vallen weg
 for (const id of Object.keys(SPOTS)) if (!HEEFT_PANO.has(id)) { delete SPOTS[id]; delete LINKS[id]; }
 VOLGORDE.splice(0, VOLGORDE.length, ...VOLGORDE.filter(id => SPOTS[id]));
